@@ -1,6 +1,6 @@
-# astro-theme-stellux
+# astro-stellux-theme
 
-`astro-theme-stellux` 是一个基于 Astro 的静态博客主题，用 MDX 管理博客文章、知识库和友链内容。它复刻了 `stellux-web` 的博客列表、文章页、文档页、友链页、Markdown 渲染、深浅色主题、搜索、RSS 和响应式布局，但不依赖后端服务。
+`astro-stellux-theme` 是一个基于 Astro 的静态博客主题，用 MDX 管理博客文章、知识库和友链内容。它复刻了 `stellux-web` 的博客列表、文章页、文档页、友链页、Markdown 渲染、深浅色主题、搜索、RSS 和响应式布局，但不依赖后端服务。
 
 ## 特性
 
@@ -59,7 +59,7 @@ pnpm build
 ## 目录结构
 
 ```text
-astro-theme-stellux/
+astro-stellux-theme/
 ├── config.yml
 ├── public/
 │   ├── avatar.jpg

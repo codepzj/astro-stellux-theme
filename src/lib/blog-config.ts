@@ -26,6 +26,26 @@ export type FriendsPageConfig = {
   exchangeDescription: string
 } & Record<string, unknown>
 
+export type GiscusConfig = {
+  enabled: boolean
+  repo: string
+  repoId: string
+  category: string
+  categoryId: string
+  mapping: string
+  strict: string
+  reactionsEnabled: string
+  emitMetadata: string
+  inputPosition: string
+  theme: string
+  lang: string
+  loading: string
+} & Record<string, unknown>
+
+export type CommentsConfig = {
+  giscus: GiscusConfig
+} & Record<string, unknown>
+
 export type StelluxConfig = {
   title: string
   url: string
@@ -43,6 +63,7 @@ export type BlogConfig = {
   friendTypes: FriendTypeConfig[]
   friendsPage: FriendsPageConfig
   friends: Friend[]
+  comments: CommentsConfig
 } & Record<string, unknown>
 
 export const DEFAULT_BLOG_CONFIG: BlogConfig = {
@@ -76,6 +97,23 @@ export const DEFAULT_BLOG_CONFIG: BlogConfig = {
     exchangeDescription: 'Add your exchange policy in config.yml.',
   },
   friends: [],
+  comments: {
+    giscus: {
+      enabled: false,
+      repo: '',
+      repoId: '',
+      category: '',
+      categoryId: '',
+      mapping: 'pathname',
+      strict: '0',
+      reactionsEnabled: '1',
+      emitMetadata: '0',
+      inputPosition: 'bottom',
+      theme: 'preferred_color_scheme',
+      lang: 'zh-CN',
+      loading: 'lazy',
+    },
+  },
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -88,6 +126,23 @@ function stringOrDefault(value: unknown, fallback: string): string {
 
 function numberOrDefault(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+}
+
+function booleanOrDefault(value: unknown, fallback: boolean): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === 'true') return true
+    if (normalized === 'false') return false
+  }
+  return fallback
+}
+
+function dataAttributeOrDefault(value: unknown, fallback: string): string {
+  if (typeof value === 'string' && value.trim()) return value
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  if (typeof value === 'boolean') return value ? '1' : '0'
+  return fallback
 }
 
 function normalizeNavLinks(value: unknown): SiteNavLink[] {
@@ -155,6 +210,35 @@ function normalizeFriends(value: unknown): Friend[] {
     .filter((friend) => friend.name.length > 0 && friend.site_url.length > 0)
 }
 
+function normalizeComments(value: unknown): CommentsConfig {
+  const comments = isRecord(value) ? value : {}
+  const giscus = isRecord(comments.giscus) ? comments.giscus : {}
+  const defaultGiscus = DEFAULT_BLOG_CONFIG.comments.giscus
+
+  return {
+    ...comments,
+    giscus: {
+      ...giscus,
+      enabled: booleanOrDefault(giscus.enabled, defaultGiscus.enabled),
+      repo: stringOrDefault(giscus.repo, defaultGiscus.repo),
+      repoId: stringOrDefault(giscus.repoId, defaultGiscus.repoId),
+      category: stringOrDefault(giscus.category, defaultGiscus.category),
+      categoryId: stringOrDefault(giscus.categoryId, defaultGiscus.categoryId),
+      mapping: dataAttributeOrDefault(giscus.mapping, defaultGiscus.mapping),
+      strict: dataAttributeOrDefault(giscus.strict, defaultGiscus.strict),
+      reactionsEnabled: dataAttributeOrDefault(
+        giscus.reactionsEnabled,
+        defaultGiscus.reactionsEnabled
+      ),
+      emitMetadata: dataAttributeOrDefault(giscus.emitMetadata, defaultGiscus.emitMetadata),
+      inputPosition: dataAttributeOrDefault(giscus.inputPosition, defaultGiscus.inputPosition),
+      theme: dataAttributeOrDefault(giscus.theme, defaultGiscus.theme),
+      lang: dataAttributeOrDefault(giscus.lang, defaultGiscus.lang),
+      loading: dataAttributeOrDefault(giscus.loading, defaultGiscus.loading),
+    },
+  }
+}
+
 export function parseBlogConfig(source: string): BlogConfig {
   const parsed = parse(source) as unknown
   const root = isRecord(parsed) ? parsed : {}
@@ -177,6 +261,7 @@ export function parseBlogConfig(source: string): BlogConfig {
     friendTypes: normalizeFriendTypes(root.friendTypes),
     friendsPage: normalizeFriendsPage(root.friendsPage),
     friends: normalizeFriends(root.friends),
+    comments: normalizeComments(root.comments),
   }
 }
 

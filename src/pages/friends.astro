@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import GiscusComments from '@/components/GiscusComments.astro'
 import Icon from '@/components/Icon.astro'
 import { BLOG_CONTENT_MAX_CLASS } from '@/lib/site'
 import { badgeClass } from '@/lib/ui'
@@ -9,6 +10,17 @@ import { FRIEND_TYPES, groupFriends } from '@/lib/friends'
 const friendList = BLOG_CONFIG.friends
 const friendsPage = BLOG_CONFIG.friendsPage
 const groups = groupFriends(friendList)
+const siteConfig = BLOG_CONFIG.stellux
+const defaultFriendType = FRIEND_TYPES.find((type) => type.label.includes('技术'))?.label ?? FRIEND_TYPES[0]?.label ?? ''
+const normalizedSiteUrl = siteConfig.url.replace(/\/$/, '')
+const siteAvatarUrl = siteConfig.avatar.startsWith('http')
+  ? siteConfig.avatar
+  : `${normalizedSiteUrl}${siteConfig.avatar.startsWith('/') ? '' : '/'}${siteConfig.avatar}`
+const friendCommentExample = `名称：${siteConfig.title}
+链接：${normalizedSiteUrl}
+头像：${siteAvatarUrl}
+描述：${siteConfig.description}
+类型：${defaultFriendType}`
 
 function friendTypeLabel(type: number): string {
   return FRIEND_TYPES.find((item) => item.value === type)?.label ?? '其他'
@@ -136,6 +148,34 @@ function avatarFallback(name: string): string {
             </div>
           </div>
         </div>
+
+        <section
+          class="rounded-xl border border-border/70 bg-card/70 p-4 shadow-sm shadow-black/[0.03] md:p-5 dark:bg-card/60 dark:shadow-black/20"
+          aria-labelledby="friend-comment-format-title"
+        >
+          <div class="flex items-start gap-3">
+            <Icon name="file-text" class="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+            <div class="min-w-0 flex-1 space-y-3">
+              <div class="space-y-1">
+                <h2 id="friend-comment-format-title" class="font-medium text-foreground">
+                  友链申请示范
+                </h2>
+                <p class="text-sm leading-relaxed text-muted-foreground">
+                  请先把本站添加到你的友链页，然后参考示范在下方评论区提交。
+                </p>
+              </div>
+
+              <div class="min-w-0 space-y-2">
+                <div class="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                  以本站为例
+                </div>
+                <pre class="overflow-x-auto rounded-lg border border-border/70 bg-muted/35 p-3 text-xs leading-relaxed text-foreground"><code>{friendCommentExample}</code></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <GiscusComments title="评论区" />
       </div>
     </div>
   </main>

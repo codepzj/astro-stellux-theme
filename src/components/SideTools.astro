@@ -1,19 +1,146 @@
 ---
 import Icon from './Icon.astro'
 import { buttonClass } from '@/lib/ui'
+
+type Props = {
+  showCommentsLink?: boolean
+  showSidebarToggle?: boolean
+}
+
+const { showCommentsLink = false, showSidebarToggle = false } = Astro.props
 ---
 
-<button
-  type="button"
-  aria-label="回到顶部"
-  class={buttonClass('outline', 'icon', 'fixed bottom-6 right-6 z-40 rounded-full border-border/80 bg-background/90 shadow-md backdrop-blur-sm')}
-  data-back-to-top
+<div
+  data-side-tools
+  class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2 rounded-[1.75rem] bg-background/90 backdrop-blur-sm"
 >
-  <Icon name="arrow-up" class="size-5" />
-</button>
+  {showSidebarToggle && (
+    <button
+      type="button"
+      aria-label="折叠侧边栏"
+      aria-controls="document-sidebar"
+      aria-expanded="true"
+      class={buttonClass('outline', 'icon', 'hidden rounded-full border-border/80 bg-background/90 shadow-md backdrop-blur-sm md:inline-flex')}
+      data-doc-sidebar-toggle
+    >
+      <Icon name="panel-left-close" class="size-4 doc-sidebar-close-icon" />
+      <Icon name="panel-left-open" class="hidden size-4 doc-sidebar-open-icon" />
+    </button>
+  )}
+
+  {showCommentsLink && (
+    <a
+      href="#comments"
+      aria-label="到达评论区"
+      title="到达评论区"
+      class={buttonClass('outline', 'icon', 'rounded-full border-border/80 bg-background/90 shadow-md backdrop-blur-sm')}
+      data-comments-link
+    >
+      <Icon name="message-circle" class="size-4" />
+    </a>
+  )}
+
+  <button
+    type="button"
+    aria-label="回到顶部"
+    class={buttonClass('outline', 'icon', 'rounded-full border-border/80 bg-background/90 shadow-md backdrop-blur-sm')}
+    data-back-to-top
+  >
+    <Icon name="arrow-up" class="size-5" />
+  </button>
+</div>
 
 <script is:inline>
-  document.querySelector('[data-back-to-top]')?.addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  })
+  ;(() => {
+    const storageKey = 'stellux-doc-sidebar-collapsed'
+    const sidebarToggleSelector = '[data-doc-sidebar-toggle]'
+    const commentsLinkSelector = '[data-comments-link]'
+    const backToTopSelector = '[data-back-to-top]'
+
+    function getStoredSidebarState() {
+      try {
+        return localStorage.getItem(storageKey) === 'true'
+      } catch {
+        return false
+      }
+    }
+
+    function storeSidebarState(collapsed) {
+      try {
+        localStorage.setItem(storageKey, String(collapsed))
+      } catch {
+        // Ignore storage errors so the button still works in restricted browsers.
+      }
+    }
+
+    function applySidebarState(collapsed, button, sidebar, main) {
+      sidebar.toggleAttribute('data-collapsed', collapsed)
+      main.toggleAttribute('data-sidebar-collapsed', collapsed)
+      button.setAttribute('aria-expanded', String(!collapsed))
+      button.setAttribute('aria-label', collapsed ? '展开侧边栏' : '折叠侧边栏')
+      button.querySelector('.doc-sidebar-close-icon')?.classList.toggle('hidden', collapsed)
+      button.querySelector('.doc-sidebar-open-icon')?.classList.toggle('hidden', !collapsed)
+    }
+
+    function getSidebarElements(button) {
+      const sidebar = document.querySelector('[data-doc-sidebar]')
+      const main = document.querySelector('[data-doc-main]')
+      if (!button || !sidebar || !main) return null
+      return { button, sidebar, main }
+    }
+
+    function initSidebarToggle() {
+      const button = document.querySelector(sidebarToggleSelector)
+      const elements = getSidebarElements(button)
+      if (!elements) return
+      applySidebarState(getStoredSidebarState(), elements.button, elements.sidebar, elements.main)
+    }
+
+    function scrollToComments(behavior = 'smooth') {
+      const comments = document.getElementById('comments')
+      if (!comments) return
+      comments.scrollIntoView({ block: 'start', behavior })
+    }
+
+    function handleDocumentClick(event) {
+      const target = event.target instanceof Element ? event.target : null
+      if (!target) return
+
+      if (target.closest(commentsLinkSelector)) {
+        event.preventDefault()
+        if (window.location.hash !== '#comments') history.pushState(null, '', '#comments')
+        scrollToComments()
+        ;[250, 750, 1400].forEach((delay) => {
+          window.setTimeout(() => scrollToComments('auto'), delay)
+        })
+        return
+      }
+
+      if (target.closest(backToTopSelector)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+
+      const button = target.closest(sidebarToggleSelector)
+      const elements = getSidebarElements(button)
+      if (!elements) return
+
+      const collapsed = !elements.sidebar.hasAttribute('data-collapsed')
+      storeSidebarState(collapsed)
+      applySidebarState(collapsed, elements.button, elements.sidebar, elements.main)
+    }
+
+    if (!window.__stelluxSideToolsBound) {
+      document.addEventListener('click', handleDocumentClick)
+      window.__stelluxSideToolsBound = true
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSidebarToggle, { once: true })
+    } else {
+      initSidebarToggle()
+    }
+
+    document.addEventListener('astro:page-load', initSidebarToggle)
+  })()
 </script>

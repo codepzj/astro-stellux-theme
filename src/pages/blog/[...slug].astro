@@ -2,10 +2,12 @@
 import { getCollection, render } from 'astro:content'
 import type { CollectionEntry } from 'astro:content'
 import FloatingToc from '@/components/FloatingToc.astro'
+import GiscusComments from '@/components/GiscusComments.astro'
 import PostArticleHeader from '@/components/PostArticleHeader.astro'
 import SideTools from '@/components/SideTools.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { filterVisiblePosts, getBlogSlug } from '@/lib/blog'
+import { GISCUS_COMMENTS_ENABLED } from '@/lib/comments'
 import { BLOG_CONTENT_MAX_CLASS } from '@/lib/site'
 
 export async function getStaticPaths() {
@@ -30,10 +32,11 @@ const { Content, headings } = await render(post)
           <div class="markdown-body min-w-0 max-w-full overflow-x-hidden pb-12 font-sans text-pretty text-foreground antialiased md:pb-16 lg:pb-20">
             <Content />
           </div>
+          <GiscusComments title="评论区" />
         </article>
       </div>
       <FloatingToc headings={headings} />
-      <SideTools />
+      <SideTools showCommentsLink={GISCUS_COMMENTS_ENABLED} />
     </div>
   </main>
   <script>

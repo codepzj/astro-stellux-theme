@@ -166,7 +166,7 @@ const hasRootBody = isRoot && Boolean(rootEntry.body?.trim())
 
 <DocumentLayout title={pageEntry.data.title} description={pageEntry.data.description} image={root.thumbnail}>
   <div class="flex min-h-svh w-full bg-background">
-    <aside class="fixed left-0 top-0 hidden h-svh w-64 flex-col border-r border-sidebar-border bg-sidebar/95 text-sidebar-foreground md:flex">
+    <aside id="document-sidebar" class="fixed left-0 top-0 hidden h-svh w-64 flex-col border-r border-sidebar-border bg-sidebar/95 text-sidebar-foreground md:flex" data-doc-sidebar>
       <div class="px-1 pb-3 pt-4">
         <div class="mt-2 flex min-h-9 min-w-0 flex-1 items-center py-0.5">
           <a href="/document" aria-label="返回文档" class="group/back-link relative isolate inline-flex size-7 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
@@ -185,7 +185,7 @@ const hasRootBody = isRoot && Boolean(rootEntry.body?.trim())
       <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1 pb-6" set:html={sidebarTreeHtml(tree, activeUrl)} />
     </aside>
 
-    <main class="flex min-h-svh min-w-0 flex-1 flex-col md:pl-64">
+    <main class="flex min-h-svh min-w-0 flex-1 flex-col md:pl-64" data-doc-main>
       <div class="mx-auto flex min-h-0 min-w-0 w-full max-w-3xl flex-1 flex-col px-4 pb-10 pt-8">
         <h1 class="mb-8 min-w-0 max-w-full py-4 text-balance font-serif text-3xl font-bold tracking-tight text-foreground">
           {pageEntry.data.title}
@@ -233,7 +233,7 @@ const hasRootBody = isRoot && Boolean(rootEntry.body?.trim())
         )}
       </div>
       {!isRoot && <FloatingToc headings={headings} />}
-      <SideTools />
+      <SideTools showSidebarToggle />
       <Footer />
     </main>
   </div>
@@ -248,6 +248,24 @@ const hasRootBody = isRoot && Boolean(rootEntry.body?.trim())
 
     .sidebar-dir[open] > .sidebar-dir-summary .sidebar-dir-chevron {
       transform: rotate(90deg);
+    }
+
+    @media (min-width: 768px) {
+      [data-doc-sidebar] {
+        transition: transform 180ms ease-in-out;
+      }
+
+      [data-doc-main] {
+        transition: padding-left 180ms ease-in-out;
+      }
+
+      [data-doc-sidebar][data-collapsed] {
+        transform: translateX(-100%);
+      }
+
+      [data-doc-main][data-sidebar-collapsed] {
+        padding-left: 0;
+      }
     }
   </style>
   <script>

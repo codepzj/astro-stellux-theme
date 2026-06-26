@@ -1,0 +1,90 @@
+---
+import { GISCUS_CONFIG, isGiscusCommentsEnabled } from '@/lib/comments'
+
+type Props = {
+  id?: string
+  title?: string
+}
+
+const { id = 'comments', title } = Astro.props
+const giscus = GISCUS_CONFIG
+const isEnabled = isGiscusCommentsEnabled(giscus)
+const lightGiscusTheme = giscus.theme === 'preferred_color_scheme' ? 'light' : giscus.theme
+const darkGiscusTheme = 'dark'
+---
+
+{
+  isEnabled && (
+    <section id={id} class="mt-12 scroll-mt-8 border-t border-border/60 pt-8" aria-label="评论">
+      {title && (
+        <h2 class="mb-5 font-serif text-2xl font-bold tracking-normal text-foreground md:text-3xl">
+          {title}
+        </h2>
+      )}
+      <div
+        data-giscus-comments
+        data-repo={giscus.repo}
+        data-repo-id={giscus.repoId}
+        data-category={giscus.category}
+        data-category-id={giscus.categoryId}
+        data-mapping={giscus.mapping}
+        data-strict={giscus.strict}
+        data-reactions-enabled={giscus.reactionsEnabled}
+        data-emit-metadata={giscus.emitMetadata}
+        data-input-position={giscus.inputPosition}
+        data-light-theme={lightGiscusTheme}
+        data-dark-theme={darkGiscusTheme}
+        data-lang={giscus.lang}
+        data-loading={giscus.loading}
+      />
+      <script is:inline>
+        ;(() => {
+          const currentScript = document.currentScript
+          const container =
+            currentScript?.previousElementSibling?.matches('[data-giscus-comments]')
+              ? currentScript.previousElementSibling
+              : currentScript?.parentElement?.querySelector('[data-giscus-comments]')
+          if (!container || container.dataset.giscusLoaded === 'true') return
+          container.dataset.giscusLoaded = 'true'
+
+          const giscusOrigin = 'https://giscus.app'
+          const isDarkTheme = () => document.documentElement.classList.contains('dark')
+          const currentGiscusTheme = () =>
+            isDarkTheme() ? container.dataset.darkTheme || 'dark' : container.dataset.lightTheme || 'light'
+
+          function syncGiscusTheme() {
+            const iframe = document.querySelector('iframe.giscus-frame')
+            iframe?.contentWindow?.postMessage(
+              { giscus: { setConfig: { theme: currentGiscusTheme() } } },
+              giscusOrigin
+            )
+          }
+
+          const script = document.createElement('script')
+          script.src = `${giscusOrigin}/client.js`
+          script.async = true
+          script.crossOrigin = 'anonymous'
+          script.setAttribute('data-repo', container.dataset.repo || '')
+          script.setAttribute('data-repo-id', container.dataset.repoId || '')
+          script.setAttribute('data-category', container.dataset.category || '')
+          script.setAttribute('data-category-id', container.dataset.categoryId || '')
+          script.setAttribute('data-mapping', container.dataset.mapping || 'pathname')
+          script.setAttribute('data-strict', container.dataset.strict || '0')
+          script.setAttribute('data-reactions-enabled', container.dataset.reactionsEnabled || '1')
+          script.setAttribute('data-emit-metadata', container.dataset.emitMetadata || '0')
+          script.setAttribute('data-input-position', container.dataset.inputPosition || 'bottom')
+          script.setAttribute('data-theme', currentGiscusTheme())
+          script.setAttribute('data-lang', container.dataset.lang || 'zh-CN')
+          script.setAttribute('data-loading', container.dataset.loading || 'lazy')
+          script.addEventListener('load', syncGiscusTheme)
+          container.append(script)
+
+          new MutationObserver(syncGiscusTheme).observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class'],
+          })
+        })()
+      </script>
+    </section>
+  )
+}

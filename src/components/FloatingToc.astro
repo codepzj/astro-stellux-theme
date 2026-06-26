@@ -16,7 +16,7 @@ const headings = Astro.props.headings.filter((heading) => heading.depth === 2 ||
 ---
 
 {headings.length > 0 && (
-  <div class="pointer-events-none fixed bottom-20 right-6 z-40 flex max-w-[calc(100vw-3rem)] flex-col-reverse items-end gap-2">
+  <div class="pointer-events-none fixed bottom-28 right-6 z-40 flex max-w-[calc(100vw-3rem)] flex-col-reverse items-end gap-2">
     <button
       type="button"
       class={buttonClass('outline', 'icon', 'pointer-events-auto size-9 rounded-full border-border/80 bg-background/90 shadow-md backdrop-blur-sm hover:bg-background')}
