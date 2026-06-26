@@ -630,7 +630,7 @@ pnpm build
 站内也有一份知识库版使用文档：
 
 ```text
-/document/astro-stellux
+/document/astro-stellux-theme
 ```
 
 它把主题使用拆成了：
