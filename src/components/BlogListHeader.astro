@@ -1,0 +1,29 @@
+---
+import Icon from './Icon.astro'
+---
+
+<div class="flex flex-col gap-4 border-b border-border/60 pb-6 md:flex-row md:items-end md:justify-between">
+  <div class="flex flex-col gap-1.5">
+    <p class="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Journal</p>
+    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <h1 class="font-serif text-2xl font-bold tracking-tight text-foreground md:text-3xl">博客</h1>
+      <span class="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Icon name="book-open" class="size-3.5 opacity-70" />
+        <span class="tabular-nums"><slot name="count" /></span>
+      </span>
+    </div>
+    <p class="max-w-md text-sm leading-relaxed text-muted-foreground">技术笔记与思考碎片，可按分类与标签筛选浏览。</p>
+  </div>
+  <button
+    type="button"
+    class="group relative flex h-10 w-full cursor-pointer items-center gap-2.5 overflow-hidden rounded-xl border border-border/80 bg-muted/30 px-3 text-sm text-muted-foreground shadow-sm transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:w-56 lg:w-64 dark:border-border/60 dark:bg-muted/20 dark:hover:bg-muted/35"
+    data-search-open
+  >
+    <Icon name="search" class="size-4 shrink-0 opacity-60 transition-opacity group-hover:opacity-90" />
+    <span class="min-w-0 flex-1 truncate text-left font-medium text-foreground/80 group-hover:text-foreground">搜索文章…</span>
+    <span class="pointer-events-none hidden shrink-0 items-center gap-0.5 sm:inline-flex">
+      <kbd class="rounded-md border border-border/80 bg-background px-1.5 py-px font-mono text-[10px] font-medium text-muted-foreground shadow-sm">⌘</kbd>
+      <kbd class="rounded-md border border-border/80 bg-background px-1.5 py-px font-mono text-[10px] font-medium text-muted-foreground shadow-sm">K</kbd>
+    </span>
+  </button>
+</div>

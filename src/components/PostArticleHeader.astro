@@ -1,0 +1,71 @@
+---
+import Icon from './Icon.astro'
+import { formatBlogDate } from '@/lib/date'
+import { estimateMarkdownCharCount, estimateReadingMinutes } from '@/lib/reading'
+import { badgeClass } from '@/lib/ui'
+import type { BlogEntryLike } from '@/lib/blog'
+
+type Props = {
+  post: BlogEntryLike
+}
+
+const { post } = Astro.props
+const charCount = estimateMarkdownCharCount(post.body)
+const readingMinutes = estimateReadingMinutes(post.body)
+const updatedDate = post.data.updatedDate ?? post.data.pubDate
+const blogQuery = (tag?: string, category?: string) => {
+  const params = new URLSearchParams()
+  params.set('page', '1')
+  if (tag) params.set('tag', tag)
+  if (category) params.set('category', category)
+  return params.toString()
+}
+---
+
+<header class="mb-10 md:mb-12">
+  <div class="rounded-2xl border border-border/70 bg-muted/30 px-4 py-5 md:px-6 md:py-6">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground md:text-[13px]">
+      <span class="inline-flex items-center gap-1.5" title={`创建于 ${formatBlogDate(post.data.pubDate)}`}>
+        <Icon name="pencil" class="size-3.5 shrink-0 opacity-80" />
+        <span class="tabular-nums">{formatBlogDate(post.data.pubDate)}</span>
+      </span>
+      <span class="inline-flex items-center gap-1.5" title={`更新于 ${formatBlogDate(updatedDate)}`}>
+        <Icon name="clock" class="size-3.5 shrink-0 opacity-80" />
+        <span class="tabular-nums">{formatBlogDate(updatedDate)}</span>
+      </span>
+      {post.data.category && (
+        <a href={`/blog?${blogQuery(undefined, post.data.category)}`} class="inline-flex items-center gap-1.5 rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" title="查看同分类文章">
+          <Icon name="leaf" class="size-3.5 shrink-0 opacity-80" />
+          <span>{post.data.category}</span>
+        </a>
+      )}
+      {readingMinutes > 0 && (
+        <span class="inline-flex items-center gap-1.5" title="预计阅读时长">
+          <Icon name="timer" class="size-3.5 shrink-0 opacity-80" />
+          <span class="tabular-nums">约 {readingMinutes} 分钟</span>
+        </span>
+      )}
+      {charCount > 0 && (
+        <span class="inline-flex items-center gap-1.5" title="正文字数（估算）">
+          <Icon name="pilcrow" class="size-3.5 shrink-0 opacity-80" />
+          <span class="tabular-nums">{charCount} 字</span>
+        </span>
+      )}
+    </div>
+    <h1 class="mt-4 text-balance py-1 text-left font-serif text-3xl font-bold tracking-tight text-foreground">
+      {post.data.title}
+    </h1>
+    {(post.data.tags ?? []).length > 0 && (
+      <div class="mt-4 flex flex-wrap gap-2">
+        {post.data.tags?.map((tag) => (
+          <a href={`/blog?${blogQuery(tag)}`}>
+            <span class={badgeClass('outline', 'tag', 'cursor-pointer')}>
+              <Icon name="tag" class="size-3" />
+              {tag}
+            </span>
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+</header>

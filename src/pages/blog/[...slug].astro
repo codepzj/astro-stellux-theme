@@ -1,0 +1,42 @@
+---
+import { getCollection, render } from 'astro:content'
+import type { CollectionEntry } from 'astro:content'
+import FloatingToc from '@/components/FloatingToc.astro'
+import PostArticleHeader from '@/components/PostArticleHeader.astro'
+import SideTools from '@/components/SideTools.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { filterVisiblePosts, getBlogSlug } from '@/lib/blog'
+import { BLOG_CONTENT_MAX_CLASS } from '@/lib/site'
+
+export async function getStaticPaths() {
+  const posts = filterVisiblePosts(await getCollection('blog'), import.meta.env.PROD)
+
+  return posts.map((post) => ({
+    params: { slug: getBlogSlug(post) },
+    props: { post },
+  }))
+}
+
+const { post } = Astro.props as { post: CollectionEntry<'blog'> }
+const { Content, headings } = await render(post)
+---
+
+<BaseLayout title={post.data.title} description={post.data.description} image={post.data.thumbnail}>
+  <main class="relative min-h-[60vh] bg-background">
+    <div class="relative container mx-auto px-4 py-10 md:px-6 md:py-12">
+      <div class={`mx-auto w-full ${BLOG_CONTENT_MAX_CLASS}`}>
+        <article class="min-w-0">
+          <PostArticleHeader post={post} />
+          <div class="markdown-body min-w-0 max-w-full overflow-x-hidden pb-12 font-sans text-pretty text-foreground antialiased md:pb-16 lg:pb-20">
+            <Content />
+          </div>
+        </article>
+      </div>
+      <FloatingToc headings={headings} />
+      <SideTools />
+    </div>
+  </main>
+  <script>
+    import '@/scripts/article-enhance'
+  </script>
+</BaseLayout>

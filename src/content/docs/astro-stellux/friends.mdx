@@ -1,0 +1,165 @@
+---
+title: Friends 新增友链
+description: 通过 config.yml 手写友链、配置分类、同步线上 API，并理解 website_type 的含义。
+pubDate: 2026-06-26
+updatedDate: 2026-06-26
+sort: 3
+---
+
+## 友链配置在哪里
+
+友链不再写在单独的 JSON 文件里，统一放在根目录：
+
+```text
+config.yml
+```
+
+相关配置有三块：
+
+- `friendTypes`：友链分类。
+- `friendsPage`：友链页面标题、描述、空状态和交换规则文案。
+- `friends`：友链列表。
+
+## 新增一条友链
+
+打开 `config.yml`，在 `friends` 下新增一项：
+
+```yaml
+friends:
+  - name: "朋友站点"
+    description: "这里写站点简介。"
+    site_url: "https://example.com"
+    avatar_url: "https://example.com/avatar.png"
+    website_type: 1
+```
+
+字段说明：
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `name` | 是 | 站点名称 |
+| `description` | 否 | 站点简介 |
+| `site_url` | 是 | 站点链接 |
+| `avatar_url` | 否 | 头像或 logo 地址 |
+| `website_type` | 否 | 友链分类编号 |
+
+保存后访问：
+
+```text
+/friends
+```
+
+## website_type 代表什么
+
+分类由 `config.yml` 的 `friendTypes` 决定。当前配置：
+
+```yaml
+friendTypes:
+  - value: 0
+    label: "大佬"
+    description: "长期输出与值得反复阅读的站点"
+  - value: 1
+    label: "技术型"
+    description: "工程、架构与技术实践相关的朋友"
+  - value: 2
+    label: "生活型"
+    description: "记录日常、观点与个人表达的角落"
+```
+
+也就是说：
+
+| `website_type` | 分类 |
+| --- | --- |
+| `0` | 大佬 |
+| `1` | 技术型 |
+| `2` | 生活型 |
+
+如果你想改分类名称，直接改 `friendTypes.label`。
+
+如果你想改分类说明，直接改 `friendTypes.description`。
+
+如果你想新增分类，追加一个新的 `value`：
+
+```yaml
+friendTypes:
+  - value: 3
+    label: "开源型"
+    description: "开源项目、工具与社区相关站点"
+```
+
+然后友链里使用：
+
+```yaml
+website_type: 3
+```
+
+## 修改友链页面文案
+
+友链页文案放在 `friendsPage`：
+
+```yaml
+friendsPage:
+  title: "友链"
+  eyebrow: "Friends"
+  description: "一些认真写作、持续创造，或者单纯让人想常去看看的站点。"
+  emptyTitle: "暂时还没有友链"
+  emptyDescription: "欢迎把你的站点投递过来，审核后会展示在这里。"
+  exchangeTitle: "友链交换规则"
+  exchangeDescription: "每月持续输出内容；请先挂载本站友链，完成后提交申请。"
+```
+
+字段作用：
+
+| 字段 | 作用 |
+| --- | --- |
+| `title` | 页面标题和 SEO 标题 |
+| `eyebrow` | 页面顶部的小标题 |
+| `description` | 页面简介和 SEO 描述 |
+| `emptyTitle` | 没有友链时的标题 |
+| `emptyDescription` | 没有友链时的说明 |
+| `exchangeTitle` | 交换规则标题 |
+| `exchangeDescription` | 交换规则内容 |
+
+## 友链头像
+
+每条友链头像使用 `avatar_url`：
+
+```yaml
+avatar_url: "https://example.com/avatar.png"
+```
+
+如果不填头像，页面会显示站点名称首字母作为兜底。
+
+站点自己的导航头像不是这里配置，而是在：
+
+```yaml
+stellux:
+  avatar: "/avatar.jpg"
+```
+
+对应文件放在：
+
+```text
+public/avatar.jpg
+```
+
+## 写完后的检查
+
+新增或修改友链后建议运行：
+
+```sh
+pnpm check
+pnpm build
+```
+
+只想快速预览可以启动开发服务：
+
+```sh
+pnpm dev
+```
+
+然后打开：
+
+```text
+http://127.0.0.1:4322/friends
+```

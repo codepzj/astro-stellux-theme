@@ -1,0 +1,71 @@
+---
+import Footer from '@/components/Footer.astro'
+import Navbar from '@/components/Navbar.astro'
+import SearchModal from '@/components/SearchModal.astro'
+import { BLOG_CONFIG } from '@/lib/blog-config'
+import { SITE, SITE_CONTENT_MAX_CLASS } from '@/lib/site'
+import '@/styles/global.css'
+
+type Props = {
+  title?: string
+  description?: string
+  image?: string
+  appShell?: boolean
+}
+
+const title = Astro.props.title ? `${Astro.props.title} · ${SITE.title}` : SITE.title
+const description = Astro.props.description ?? SITE.description
+const image = Astro.props.image
+const appShell = Astro.props.appShell ?? true
+const htmlLang = BLOG_CONFIG.stellux.htmlLang
+---
+
+<!doctype html>
+<html lang={htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="author" content={SITE.author} />
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    {image && <meta property="og:image" content={image} />}
+    <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/rss.xml" />
+    <title>{title}</title>
+    <script is:inline>
+      ;(() => {
+        const theme = localStorage.getItem('stellux-theme') || 'light'
+        const resolved =
+          theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : theme
+        document.documentElement.classList.toggle('dark', resolved === 'dark')
+      })()
+    </script>
+  </head>
+  <body class="min-h-screen w-full bg-background font-sans text-foreground antialiased">
+    <div class="relative flex min-h-screen flex-col bg-background">
+      <Navbar />
+      {appShell ? (
+        <div
+          id="content"
+          class={`peer-data-[state=collapsed]:w-[calc(100%-var(--sidebar-width-icon)-1rem)] peer-data-[state=expanded]:w-[calc(100%-var(--sidebar-width))] flex min-h-0 w-full flex-1 flex-col sm:transition-[width] sm:duration-200 sm:ease-linear group-data-[scroll-locked=1]/body:h-full has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh mx-auto ${SITE_CONTENT_MAX_CLASS}`}
+        >
+          <slot />
+          <Footer />
+        </div>
+      ) : (
+        <>
+          <slot />
+          <Footer />
+        </>
+      )}
+    </div>
+    <SearchModal />
+  </body>
+</html>

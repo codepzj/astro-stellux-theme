@@ -1,0 +1,256 @@
+---
+import { getCollection, render } from 'astro:content'
+import type { CollectionEntry } from 'astro:content'
+import DocumentLayout from '@/layouts/DocumentLayout.astro'
+import FloatingToc from '@/components/FloatingToc.astro'
+import SideTools from '@/components/SideTools.astro'
+import Icon from '@/components/Icon.astro'
+import Footer from '@/components/Footer.astro'
+import {
+  buildDocumentTree,
+  flattenDocumentTree,
+  getDocumentEntryContentAlias,
+  getDocumentEntryContentId,
+  getDocumentEntryDocumentId,
+  getDocumentEntryIsDir,
+  getDocumentEntryParentId,
+  getDocumentEntryRootAlias,
+  getDocumentEntryRootId,
+  getDocumentContentUrl,
+  getDocumentRootUrl,
+  isDocumentContentEntry,
+  isDocumentRootEntry,
+  isPublicDocumentEntry,
+  type DocumentContentLike,
+  type DocumentRootLike,
+  type DocumentTreeItem,
+} from '@/lib/docs'
+
+type DocEntry = CollectionEntry<'docs'>
+
+function toRoot(entry: DocEntry): DocumentRootLike {
+  return {
+    id: getDocumentEntryRootId(entry),
+    title: entry.data.title,
+    alias: getDocumentEntryRootAlias(entry),
+    description: entry.data.description,
+    thumbnail: entry.data.thumbnail,
+    sort: entry.data.sort,
+    createdAt: entry.data.pubDate ?? entry.data.updatedDate ?? new Date(0),
+    updatedAt: entry.data.updatedDate,
+  }
+}
+
+function toContent(entry: DocEntry): DocumentContentLike {
+  return {
+    id: getDocumentEntryContentId(entry),
+    title: entry.data.title,
+    alias: getDocumentEntryContentAlias(entry),
+    parentId: getDocumentEntryParentId(entry),
+    documentId: getDocumentEntryDocumentId(entry),
+    isDir: getDocumentEntryIsDir(entry),
+    sort: entry.data.sort,
+    createdAt: entry.data.pubDate ?? entry.data.updatedDate ?? new Date(0),
+  }
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function sidebarTreeHtml(items: DocumentTreeItem[], activeUrl: string, depth = 0): string {
+  const listClass =
+    depth === 0
+      ? 'flex w-full min-w-0 flex-col gap-1.5 px-2'
+      : 'ml-[7px] mt-1 flex min-w-0 flex-col gap-1.5 border-l border-sidebar-border/50 pl-2.5'
+
+  return `<ul class="${listClass}">${items
+    .map((item) => {
+      const active = item.url === activeUrl
+      const rowClass = [
+        'flex w-full min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-all duration-200 ease-in-out hover:bg-primary/10 dark:hover:bg-primary/20',
+        active ? 'bg-primary/10 font-semibold dark:bg-primary/20 dark:font-semibold' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+      const chevron = item.items?.length
+        ? '<svg class="sidebar-dir-chevron size-3.5 shrink-0 text-sidebar-foreground/60 transition-transform duration-150 dark:text-sidebar-foreground/85" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>'
+        : '<span class="h-4 w-[15px] shrink-0"></span>'
+      const label = `<span class="min-w-0 flex-1 truncate">${escapeHtml(item.title)}</span>`
+      const content = item.isDir
+        ? `<details open class="sidebar-dir"><summary class="sidebar-dir-summary ${rowClass} cursor-pointer list-none select-none">${chevron}${label}</summary>${item.items?.length ? sidebarTreeHtml(item.items, activeUrl, depth + 1) : ''}</details>`
+        : `<a href="${item.url}" class="${rowClass}">${chevron}${label}</a>`
+      return `<li class="rounded-md">${content}</li>`
+    })
+    .join('')}</ul>`
+}
+
+function rootTreeHtml(items: DocumentTreeItem[], activeUrl: string, depth = 0): string {
+  if (!items.length) return ''
+  const listClass = depth === 0 ? 'border-l border-border/60 pl-4 space-y-2' : 'pl-4 space-y-1'
+
+  return `<ul class="${listClass}">${items
+    .map((item) => {
+      if (item.isDir) {
+        return `<li class="space-y-1"><details open class="group"><summary class="list-none cursor-pointer select-none flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><svg class="size-3 shrink-0 text-muted-foreground transition-transform group-open:rotate-90 group-open:text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg><span>${escapeHtml(item.title)}</span></summary>${item.items?.length ? `<div class="mt-2">${rootTreeHtml(item.items, activeUrl, depth + 1)}</div>` : ''}</details></li>`
+      }
+      const active = item.url === activeUrl
+      return `<li><a href="${item.url}" class="block rounded-md px-2 py-1 text-sm transition-colors hover:bg-primary/10 ${active ? 'bg-primary/10 font-semibold text-primary' : 'text-foreground/90'}">${escapeHtml(item.title)}</a></li>`
+    })
+    .join('')}</ul>`
+}
+
+function navPages(tree: DocumentTreeItem[]) {
+  return flattenDocumentTree(tree).filter((item) => !item.isDir)
+}
+
+const entries = await getCollection('docs')
+const contentEntries = entries.filter(
+  (entry) => isPublicDocumentEntry(entry) && isDocumentContentEntry(entry)
+)
+
+export async function getStaticPaths() {
+  const entries = await getCollection('docs')
+  const roots = entries.filter((entry) => isPublicDocumentEntry(entry) && isDocumentRootEntry(entry))
+  const contentEntries = entries.filter(
+    (entry) => isPublicDocumentEntry(entry) && isDocumentContentEntry(entry)
+  )
+  const paths = []
+
+  for (const rootEntry of roots) {
+    const rootAlias = getDocumentEntryRootAlias(rootEntry)
+    paths.push({
+      params: { slug: rootAlias },
+      props: { rootEntry, contentEntry: undefined },
+    })
+
+    for (const contentEntry of contentEntries) {
+      if (getDocumentEntryRootAlias(contentEntry) !== rootAlias || getDocumentEntryIsDir(contentEntry)) continue
+      paths.push({
+        params: { slug: `${rootAlias}/${getDocumentEntryContentAlias(contentEntry)}` },
+        props: { rootEntry, contentEntry },
+      })
+    }
+  }
+
+  return paths
+}
+
+const { rootEntry, contentEntry } = Astro.props as {
+  rootEntry: DocEntry
+  contentEntry?: DocEntry
+}
+
+const root = toRoot(rootEntry)
+const rootAlias = root.alias
+const rootContents = contentEntries
+  .filter((entry) => getDocumentEntryRootAlias(entry) === rootAlias)
+  .map(toContent)
+const tree = buildDocumentTree(root, rootContents)
+const activeUrl = contentEntry
+  ? getDocumentContentUrl(root, toContent(contentEntry))
+  : getDocumentRootUrl(root)
+const pages = navPages(tree)
+const currentIndex = contentEntry ? pages.findIndex((page) => page.url === activeUrl) : -1
+const prevPage = currentIndex > 0 ? pages[currentIndex - 1] : undefined
+const nextPage = currentIndex >= 0 && currentIndex < pages.length - 1 ? pages[currentIndex + 1] : undefined
+const pageEntry = contentEntry ?? rootEntry
+const isRoot = !contentEntry
+const { Content, headings } = await render(pageEntry)
+const hasRootBody = isRoot && Boolean(rootEntry.body?.trim())
+---
+
+<DocumentLayout title={pageEntry.data.title} description={pageEntry.data.description} image={root.thumbnail}>
+  <div class="flex min-h-svh w-full bg-background">
+    <aside class="fixed left-0 top-0 hidden h-svh w-64 flex-col border-r border-sidebar-border bg-sidebar/95 text-sidebar-foreground md:flex">
+      <div class="px-1 pb-3 pt-4">
+        <div class="mt-2 flex min-h-9 min-w-0 flex-1 items-center py-0.5">
+          <a href="/document" aria-label="返回文档" class="group/back-link relative isolate inline-flex size-7 shrink-0 items-center justify-center rounded-md text-sidebar-foreground transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
+            <Icon name="chevron-left" class="relative z-10 size-3 shrink-0" />
+          </a>
+          <div class="flex min-h-0 min-w-0 flex-1 items-center text-sidebar-foreground">
+            <span class="inline-flex size-7 shrink-0 items-center justify-center self-center">
+              <Icon name="library-big" class="size-7" />
+            </span>
+            <span class="min-h-5.5 min-w-0 flex-1 truncate py-px text-base font-semibold leading-snug">
+              {root.title}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1 pb-6" set:html={sidebarTreeHtml(tree, activeUrl)} />
+    </aside>
+
+    <main class="flex min-h-svh min-w-0 flex-1 flex-col md:pl-64">
+      <div class="mx-auto flex min-h-0 min-w-0 w-full max-w-3xl flex-1 flex-col px-4 pb-10 pt-8">
+        <h1 class="mb-8 min-w-0 max-w-full py-4 text-balance font-serif text-3xl font-bold tracking-tight text-foreground">
+          {pageEntry.data.title}
+        </h1>
+        <div class="min-h-0 flex-1">
+          {isRoot && tree.length > 0 ? (
+            <div class="mt-4">
+              <div class="text-lg font-bold">👋 欢迎来到知识库</div>
+              <div class="mt-2">知识库就像书一样，让多篇文档结构化，方便知识的创作与沉淀</div>
+              <div class="mt-8" />
+              <div set:html={rootTreeHtml(tree, activeUrl)} />
+            </div>
+          ) : hasRootBody || !isRoot ? (
+            <div class="markdown-body min-w-0 max-w-full overflow-x-hidden pb-12 font-sans text-pretty text-foreground antialiased md:pb-16 lg:pb-20">
+              <Content />
+            </div>
+          ) : (
+            <p class="text-sm text-muted-foreground">暂无文档内容。</p>
+          )}
+        </div>
+
+        {!isRoot && (prevPage || nextPage) && (
+          <div class="mt-auto pt-12">
+            <div class={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${prevPage && !nextPage ? 'sm:*:first:col-start-1' : ''} ${!prevPage && nextPage ? 'sm:*:first:col-start-2' : ''}`}>
+              {prevPage && (
+                <a href={prevPage.url} class="group rounded-lg border border-border/60 bg-background/40 px-4 py-3 transition-colors hover:bg-primary/10 hover:text-foreground">
+                  <div class="flex items-center gap-2">
+                    <Icon name="chevron-left" class="size-4 text-muted-foreground group-hover:text-foreground" />
+                    <span class="text-xs text-muted-foreground group-hover:text-foreground">上一页</span>
+                  </div>
+                  <div class="mt-2 line-clamp-2 text-sm font-medium">{prevPage.title}</div>
+                </a>
+              )}
+              {nextPage && (
+                <a href={nextPage.url} class="group rounded-lg border border-border/60 bg-background/40 px-4 py-3 transition-colors hover:bg-primary/10 hover:text-foreground">
+                  <div class="flex items-center justify-end gap-2">
+                    <span class="text-xs text-muted-foreground group-hover:text-foreground">下一页</span>
+                    <Icon name="chevron-right" class="size-4 text-muted-foreground group-hover:text-foreground" />
+                  </div>
+                  <div class="mt-2 line-clamp-2 text-right text-sm font-medium">{nextPage.title}</div>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      {!isRoot && <FloatingToc headings={headings} />}
+      <SideTools />
+      <Footer />
+    </main>
+  </div>
+  <style is:global>
+    .sidebar-dir-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .sidebar-dir-summary::marker {
+      content: '';
+    }
+
+    .sidebar-dir[open] > .sidebar-dir-summary .sidebar-dir-chevron {
+      transform: rotate(90deg);
+    }
+  </style>
+  <script>
+    import '@/scripts/article-enhance'
+  </script>
+</DocumentLayout>

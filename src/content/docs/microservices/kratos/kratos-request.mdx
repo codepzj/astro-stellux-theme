@@ -1,0 +1,22 @@
+---
+title: kratos请求
+description: kratos请求
+pubDate: 2026-04-12
+updatedDate: 2026-04-12
+sort: 6
+---
+
+## HTTP
+
+### 获取原始http请求信息
+
+```plain
+import (
+    khttp "github.com/go-kratos/kratos/v2/transport/http"
+)
+
+hr, ok := khttp.RequestFromServerContext(ctx)
+if !ok {
+    return nil, errors.New("get http request failed")
+}
+```

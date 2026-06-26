@@ -1,0 +1,28 @@
+---
+title: "kratos中proto文件引入其他proto爆红"
+description: "记录一下vscode写kratos的一些问题"
+pubDate: 2025-10-25
+updatedDate: 2025-10-25
+category: "技术"
+tags: ["bug","kratos"]
+thumbnail: "/blog/kratos-proto-error.jpg"
+isTop: false
+draft: false
+slug: "kratos-proto-error"
+---
+
+在根目录下新建`.vscode/settings.json`
+
+写入代码
+
+```json
+{
+    "protoc": {
+        "options": [
+            "--proto_path=${workspaceFolder}/api",
+        ]
+    }
+}
+```
+
+即可解决报错，特此记录

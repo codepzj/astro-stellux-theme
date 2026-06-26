@@ -1,0 +1,15 @@
+---
+import { getCollection } from 'astro:content'
+import BlogList from '@/components/BlogList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { BLOG_PAGE_SIZE, filterVisiblePosts, sortBlogPosts } from '@/lib/blog'
+import { SITE } from '@/lib/site'
+
+const allPosts = sortBlogPosts(filterVisiblePosts(await getCollection('blog'), import.meta.env.PROD))
+const posts = allPosts.slice(0, BLOG_PAGE_SIZE)
+const totalPages = Math.max(1, Math.ceil(allPosts.length / BLOG_PAGE_SIZE))
+---
+
+<BaseLayout title="博客" description={SITE.description}>
+  <BlogList posts={posts} totalCount={allPosts.length} currentPage={1} totalPages={totalPages} />
+</BaseLayout>

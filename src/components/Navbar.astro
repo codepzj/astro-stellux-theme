@@ -1,0 +1,77 @@
+---
+import Icon from './Icon.astro'
+import { SITE, SITE_CONTENT_MAX_CLASS, SITE_NAV_LINKS, isSiteNavActive } from '@/lib/site'
+
+const pathname = Astro.url.pathname
+---
+
+<header class="sticky top-0 z-20 w-full border-b border-gray-200/60 bg-white/90 dark:border-white/10 dark:bg-black/70">
+  <div class={`mx-auto flex h-14 w-full items-center justify-between px-4 md:px-6 ${SITE_CONTENT_MAX_CLASS}`}>
+    <a href="/" class="flex min-w-[120px] shrink-0 items-center gap-2 md:min-w-[140px] md:gap-3">
+      <img src={SITE.avatar} alt="avatar" class="size-7 rounded-full object-cover md:size-8" loading="lazy" />
+      <span class="truncate whitespace-nowrap text-[15px] font-semibold text-foreground">{SITE.title}</span>
+    </a>
+
+    <nav class="hidden w-full items-center justify-end gap-6 md:flex" aria-label="主导航">
+      {SITE_NAV_LINKS.map((item) => {
+        const active = isSiteNavActive(pathname, item.href)
+        return (
+          <a
+            href={item.href}
+            class={`navbar-link cursor-pointer text-[14px] font-medium transition-colors duration-200 ${
+              active
+                ? 'nav-link-active text-foreground'
+                : 'text-gray-700 hover:text-foreground dark:text-zinc-200 dark:hover:text-white'
+            }`}
+          >
+            {item.label}
+          </a>
+        )
+      })}
+    </nav>
+
+    <button
+      type="button"
+      class="rounded-full p-1.5 text-gray-700 hover:bg-gray-100 md:hidden dark:text-gray-200 dark:hover:bg-gray-800"
+      aria-label="菜单"
+      aria-expanded="false"
+      data-mobile-menu-button
+    >
+      <Icon name="menu" class="size-5 menu-open-icon" />
+      <Icon name="x" class="hidden size-5 menu-close-icon" />
+    </button>
+  </div>
+
+  <div class="fixed inset-x-0 top-14 z-30 hidden border-b border-gray-200/60 bg-white/90 dark:border-white/10 dark:bg-black/70" data-mobile-menu>
+    <nav class={`mx-auto flex flex-col gap-3 px-4 py-3 md:px-6 ${SITE_CONTENT_MAX_CLASS}`} aria-label="移动导航">
+      {SITE_NAV_LINKS.map((item) => (
+        <a href={item.href} class="cursor-pointer px-2 py-1.5 text-sm font-medium text-gray-700 transition-colors duration-200 hover:text-foreground dark:text-gray-100">
+          {item.label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</header>
+
+<script is:inline>
+  ;(() => {
+    const button = document.querySelector('[data-mobile-menu-button]')
+    const menu = document.querySelector('[data-mobile-menu]')
+    if (!button || !menu) return
+
+    button.addEventListener('click', () => {
+      const open = button.getAttribute('aria-expanded') !== 'true'
+      button.setAttribute('aria-expanded', String(open))
+      menu.classList.toggle('hidden', !open)
+      button.querySelector('.menu-open-icon')?.classList.toggle('hidden', open)
+      button.querySelector('.menu-close-icon')?.classList.toggle('hidden', !open)
+    })
+
+    menu.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        button.setAttribute('aria-expanded', 'false')
+        menu.classList.add('hidden')
+      })
+    })
+  })()
+</script>

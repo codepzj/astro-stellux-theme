@@ -1,0 +1,33 @@
+---
+import Icon from './Icon.astro'
+import ThemeSwitcher from './ThemeSwitcher.astro'
+import { SITE, SITE_CONTENT_MAX_CLASS, SITE_NAV_LINKS, isSiteNavActive } from '@/lib/site'
+
+const pathname = Astro.url.pathname
+---
+
+<footer role="contentinfo" class="mt-auto w-full border-t border-border/60 bg-background text-xs text-muted-foreground">
+  <div class={`mx-auto grid w-full grid-cols-1 justify-items-center gap-y-4 px-4 py-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center md:justify-items-stretch md:gap-x-8 md:gap-y-0 md:px-6 md:py-3.5 ${SITE_CONTENT_MAX_CLASS}`}>
+    <p class="text-center md:justify-self-start md:text-left">
+      <a href={SITE.repoUrl} target="_blank" rel="noreferrer noopener" class="inline-flex items-center gap-1.5 font-medium text-foreground/90 hover:text-foreground">
+        <Icon name="github" class="size-3.5" />
+        stellux
+      </a>
+    </p>
+
+    <nav aria-label="页脚导航" class="flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-1 md:justify-self-center md:gap-x-5">
+      {SITE_NAV_LINKS.map((item) => (
+        <a href={item.href} class={`cursor-pointer font-medium ${isSiteNavActive(pathname, item.href) ? 'text-foreground' : 'hover:text-foreground'}`}>
+          {item.label}
+        </a>
+      ))}
+      <a href="/rss.xml" aria-label="RSS 订阅" title="RSS" class="inline-flex cursor-pointer rounded-sm p-0.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+        <Icon name="rss" class="size-3.5" />
+      </a>
+    </nav>
+
+    <div class="flex justify-center md:justify-self-end">
+      <ThemeSwitcher />
+    </div>
+  </div>
+</footer>

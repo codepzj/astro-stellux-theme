@@ -1,0 +1,32 @@
+---
+import { getCollection } from 'astro:content'
+import BlogList from '@/components/BlogList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { BLOG_PAGE_SIZE, filterVisiblePosts, sortBlogPosts } from '@/lib/blog'
+import { SITE } from '@/lib/site'
+
+export async function getStaticPaths() {
+  const allPosts = sortBlogPosts(filterVisiblePosts(await getCollection('blog'), import.meta.env.PROD))
+  const totalPages = Math.max(1, Math.ceil(allPosts.length / BLOG_PAGE_SIZE))
+
+  return Array.from({ length: Math.max(0, totalPages - 1) }, (_, index) => {
+    const page = index + 2
+    const start = (page - 1) * BLOG_PAGE_SIZE
+    return {
+      params: { page: String(page) },
+      props: {
+        posts: allPosts.slice(start, start + BLOG_PAGE_SIZE),
+        totalCount: allPosts.length,
+        currentPage: page,
+        totalPages,
+      },
+    }
+  })
+}
+
+const { posts, totalCount, currentPage, totalPages } = Astro.props
+---
+
+<BaseLayout title={`博客 · 第${currentPage}页`} description={SITE.description}>
+  <BlogList posts={posts} totalCount={totalCount} currentPage={currentPage} totalPages={totalPages} />
+</BaseLayout>

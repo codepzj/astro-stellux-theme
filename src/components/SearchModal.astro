@@ -1,0 +1,165 @@
+---
+import Icon from './Icon.astro'
+---
+
+<div class="fixed inset-0 z-50 hidden bg-background/75 backdrop-blur-sm" data-search-overlay>
+  <div class="mx-auto mt-[12vh] w-[calc(100%-1.5rem)] max-w-xl rounded-lg border border-border/70 bg-background shadow-lg" role="dialog" aria-modal="true" aria-labelledby="search-title">
+    <div class="sr-only" id="search-title">搜索文章</div>
+    <div class="flex items-center gap-2 border-b border-border/60 px-3 py-3">
+      <Icon name="search" class="size-4 text-muted-foreground" />
+      <input
+        type="search"
+        class="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+        placeholder="输入关键词…"
+        autocomplete="off"
+        data-search-input
+      />
+      <button type="button" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="关闭搜索" data-search-close>
+        <Icon name="x" class="size-4" />
+      </button>
+    </div>
+    <div class="hidden min-h-9 items-center gap-2 border-b border-border/60 bg-muted/15 px-3 py-2 text-xs text-muted-foreground" data-search-status>
+      输入关键词开始搜索
+    </div>
+    <div class="max-h-[min(52vh,420px)] min-h-56 overflow-y-auto p-2" data-search-results>
+      <div class="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-8">
+        <p class="text-[15px] font-semibold tracking-tight text-foreground">搜索博客</p>
+        <p class="mt-2 text-xs text-muted-foreground">输入关键词开始搜索</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/60 bg-muted/20 px-3 py-2.5 text-[11px] text-muted-foreground">
+      <span class="inline-flex items-center gap-1.5"><kbd class="rounded border bg-background px-1.5 py-0.5 font-mono text-[10px] font-medium shadow-sm">↑↓</kbd>选择</span>
+      <span class="inline-flex items-center gap-1.5"><kbd class="rounded border bg-background px-1.5 py-0.5 font-mono text-[10px] font-medium shadow-sm">↵</kbd>打开</span>
+      <span class="inline-flex items-center gap-1.5"><kbd class="rounded border bg-background px-1.5 py-0.5 font-mono text-[10px] font-medium shadow-sm">esc</kbd>关闭</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  type SearchItem = {
+    title: string
+    description: string
+    url: string
+    category: string
+    tags: string[]
+    thumbnail?: string
+    text: string
+  }
+
+  const overlay = document.querySelector<HTMLElement>('[data-search-overlay]')
+  const input = document.querySelector<HTMLInputElement>('[data-search-input]')
+  const closeButton = document.querySelector<HTMLButtonElement>('[data-search-close]')
+  const results = document.querySelector<HTMLElement>('[data-search-results]')
+  const status = document.querySelector<HTMLElement>('[data-search-status]')
+  let index: SearchItem[] | null = null
+  let activeIndex = 0
+  let currentMatches: SearchItem[] = []
+
+  async function loadIndex(): Promise<SearchItem[]> {
+    if (index) return index
+    const response = await fetch('/search-index.json')
+    index = await response.json()
+    return index ?? []
+  }
+
+  function highlight(text: string, key: string) {
+    if (!key.trim()) return text
+    const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="rounded-sm bg-primary/15 px-0.5 text-foreground dark:bg-primary/25">$1</mark>')
+  }
+
+  function render(matches: SearchItem[], keyword: string) {
+    if (!results || !status) return
+    currentMatches = matches
+    activeIndex = 0
+    status.classList.toggle('hidden', !keyword)
+    status.classList.toggle('flex', Boolean(keyword))
+    status.innerHTML = keyword
+      ? `找到 <span class="font-semibold tabular-nums text-foreground">${matches.length}</span> 篇相关文章`
+      : ''
+
+    if (!keyword) {
+      results.innerHTML = '<div class="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-8"><p class="text-[15px] font-semibold tracking-tight text-foreground">搜索博客</p><p class="mt-2 text-xs text-muted-foreground">输入关键词开始搜索</p></div>'
+      return
+    }
+
+    if (matches.length === 0) {
+      results.innerHTML = `<div class="flex flex-col items-center justify-center px-6 py-14 text-center" role="status"><p class="text-sm font-medium text-foreground">未找到匹配的文章</p><p class="mt-2 max-w-68 text-xs leading-relaxed text-muted-foreground">没有找到与「<span class="font-medium text-foreground/90">${keyword}</span>」相关的内容，可换个说法或缩短关键词再试。</p></div>`
+      return
+    }
+
+    const fileTextIcon = '<svg class="size-4 shrink-0 text-muted-foreground opacity-80" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>'
+    results.innerHTML = `<div class="p-1 text-xs font-medium text-muted-foreground">文章</div>${matches
+      .map(
+        (item, index) =>
+          `<a href="${item.url}" data-search-result="${index}" class="mb-1 flex cursor-pointer gap-3 rounded-lg border border-transparent px-3 py-3 last:mb-0 hover:border-border hover:bg-muted/60 hover:shadow-sm ${index === activeIndex ? 'border-border bg-muted/60 shadow-sm' : ''}">${fileTextIcon}<span class="min-w-0 flex-1 text-left"><span class="line-clamp-2 font-medium leading-snug text-foreground">${highlight(item.title, keyword)}</span>${item.description ? `<span class="mt-1 line-clamp-2 block text-sm leading-relaxed text-muted-foreground">${highlight(item.description, keyword)}</span>` : ''}</span></a>`
+      )
+      .join('')}`
+  }
+
+  async function search() {
+    const keyword = input?.value.trim() || ''
+    const items = await loadIndex()
+    const lower = keyword.toLowerCase()
+    const matches = keyword
+      ? items.filter((item) => item.text.toLowerCase().includes(lower)).slice(0, 12)
+      : []
+    render(matches, keyword)
+  }
+
+  function openSearch() {
+    overlay?.classList.remove('hidden')
+    document.body.style.overflow = 'hidden'
+    setTimeout(() => input?.focus(), 0)
+    search()
+  }
+
+  function closeSearch() {
+    overlay?.classList.add('hidden')
+    document.body.style.overflow = ''
+    if (input) input.value = ''
+    render([], '')
+  }
+
+  function setActive(next: number) {
+    if (!results || currentMatches.length === 0) return
+    activeIndex = (next + currentMatches.length) % currentMatches.length
+    results.querySelectorAll('[data-search-result]').forEach((node, index) => {
+      node.classList.toggle('border-border', index === activeIndex)
+      node.classList.toggle('bg-muted/60', index === activeIndex)
+      node.classList.toggle('shadow-sm', index === activeIndex)
+    })
+    results.querySelector(`[data-search-result="${activeIndex}"]`)?.scrollIntoView({ block: 'nearest' })
+  }
+
+  document.querySelectorAll('[data-search-open]').forEach((button) => {
+    button.addEventListener('click', openSearch)
+  })
+  closeButton?.addEventListener('click', closeSearch)
+  overlay?.addEventListener('click', (event) => {
+    if (event.target === overlay) closeSearch()
+  })
+  input?.addEventListener('input', search)
+  document.addEventListener('keydown', (event) => {
+    const isMac = /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)
+    const mod = isMac ? event.metaKey : event.ctrlKey
+    if (mod && event.key.toLowerCase() === 'k') {
+      event.preventDefault()
+      openSearch()
+      return
+    }
+    if (overlay?.classList.contains('hidden')) return
+    if (event.key === 'Escape') closeSearch()
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setActive(activeIndex + 1)
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActive(activeIndex - 1)
+    }
+    if (event.key === 'Enter' && currentMatches[activeIndex]) {
+      window.location.href = currentMatches[activeIndex].url
+    }
+  })
+</script>

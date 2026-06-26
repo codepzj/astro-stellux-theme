@@ -1,0 +1,142 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import Icon from '@/components/Icon.astro'
+import { BLOG_CONTENT_MAX_CLASS } from '@/lib/site'
+import { badgeClass } from '@/lib/ui'
+import { BLOG_CONFIG } from '@/lib/blog-config'
+import { FRIEND_TYPES, groupFriends } from '@/lib/friends'
+
+const friendList = BLOG_CONFIG.friends
+const friendsPage = BLOG_CONFIG.friendsPage
+const groups = groupFriends(friendList)
+
+function friendTypeLabel(type: number): string {
+  return FRIEND_TYPES.find((item) => item.value === type)?.label ?? '其他'
+}
+
+function avatarFallback(name: string): string {
+  return name.trim().slice(0, 1).toUpperCase() || '?'
+}
+---
+
+<BaseLayout title={friendsPage.title} description={friendsPage.description}>
+  <main class="relative flex-1 bg-background">
+    <div class="container mx-auto px-4 py-10 md:px-6 md:py-16">
+      <div class={`mx-auto w-full space-y-8 ${BLOG_CONTENT_MAX_CLASS}`}>
+        <div class="flex flex-col gap-4 border-b border-border/60 pb-6 md:flex-row md:items-end md:justify-between">
+          <div class="space-y-1.5">
+            <p class="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+              {friendsPage.eyebrow}
+            </p>
+            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h1 class="font-serif text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+                {friendsPage.title}
+              </h1>
+              <span class="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Icon name="users-round" class="size-3.5 opacity-70" />
+                <span class="tabular-nums">{friendList.length} 个站点</span>
+              </span>
+            </div>
+            <p class="max-w-md text-sm leading-relaxed text-muted-foreground">
+              {friendsPage.description}
+            </p>
+          </div>
+        </div>
+
+        {friendList.length > 0 ? (
+          <div class="space-y-10">
+            {FRIEND_TYPES.map((type) => {
+              const friends = groups[type.value]
+
+              return friends.length > 0 ? (
+                <section class="space-y-4">
+                  <div class="flex flex-wrap items-end justify-between gap-2 border-b border-border/50 pb-3">
+                    <div class="space-y-1">
+                      <h2 class="font-serif text-xl font-semibold tracking-tight text-foreground">
+                        {type.label}
+                      </h2>
+                      <p class="text-sm leading-relaxed text-muted-foreground">
+                        {type.description}
+                      </p>
+                    </div>
+                    <span class="rounded-md border border-border/70 bg-muted/35 px-2 py-1 text-xs tabular-nums text-muted-foreground">
+                      {friends.length} 个
+                    </span>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {friends.map((friend) => (
+                      <a
+                        href={friend.site_url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        class="block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      >
+                        <article class="group flex h-full min-h-40 cursor-pointer flex-col gap-3 overflow-hidden rounded-xl border border-border/70 bg-card/90 p-4 shadow-sm shadow-black/[0.04] transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-border hover:bg-muted/30 hover:shadow-md hover:shadow-black/[0.07] dark:bg-card/75 dark:shadow-black/20 dark:hover:bg-card/90 dark:hover:shadow-lg dark:hover:shadow-black/30">
+                          <div class="flex flex-row items-start gap-3.5">
+                            <div class="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-base font-semibold text-muted-foreground ring-1 ring-border/70 ring-offset-2 ring-offset-background">
+                              {friend.avatar_url ? (
+                                <img
+                                  src={friend.avatar_url}
+                                  alt={friend.name}
+                                  class="absolute inset-0 size-full object-cover transition-transform duration-300 motion-safe:group-hover:scale-105"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <span>{avatarFallback(friend.name)}</span>
+                              )}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                              <h3 class="line-clamp-2 text-base font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+                                {friend.name}
+                              </h3>
+                              <p class="mt-1 line-clamp-2 min-h-[2lh] text-sm leading-relaxed text-muted-foreground">
+                                {friend.description}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div class="mt-auto flex items-center gap-2 pt-3">
+                            <span class={badgeClass('secondary', 'category', 'bg-muted text-foreground')}>
+                              <Icon name="globe" class="size-3" />
+                              {friendTypeLabel(friend.website_type)}
+                            </span>
+                            <span class={badgeClass('outline', 'meta', 'bg-background/70')}>
+                              <Icon name="external-link" class="size-3" />
+                              访问
+                            </span>
+                          </div>
+                        </article>
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              ) : null
+            })}
+          </div>
+        ) : (
+          <div class="rounded-xl border border-dashed border-border/80 bg-muted/20 px-5 py-10 text-center">
+            <h2 class="font-serif text-xl font-semibold tracking-tight text-foreground">
+              {friendsPage.emptyTitle}
+            </h2>
+            <p class="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+              {friendsPage.emptyDescription}
+            </p>
+          </div>
+        )}
+
+        <div class="rounded-xl border border-border/70 bg-muted/25 p-4 md:p-5">
+          <div class="flex items-start gap-3">
+            <Icon name="info" class="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+            <div class="min-w-0 space-y-2">
+              <div class="font-medium text-foreground">{friendsPage.exchangeTitle}</div>
+              <p class="text-sm leading-relaxed text-muted-foreground">
+                {friendsPage.exchangeDescription}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</BaseLayout>

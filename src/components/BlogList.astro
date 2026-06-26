@@ -1,0 +1,65 @@
+---
+import BlogListHeader from './BlogListHeader.astro'
+import BlogPostCard from './BlogPostCard.astro'
+import Icon from './Icon.astro'
+import { BLOG_CONTENT_MAX_CLASS } from '@/lib/site'
+import { getPaginationWindow, type BlogEntryLike } from '@/lib/blog'
+import { buttonClass } from '@/lib/ui'
+
+type Props = {
+  posts: BlogEntryLike[]
+  totalCount?: number
+  currentPage?: number
+  totalPages?: number
+  basePath?: string
+}
+
+const { posts, totalCount = posts.length, currentPage = 1, totalPages = 1, basePath = '/blog' } = Astro.props
+const pages = getPaginationWindow(totalPages, currentPage)
+const pageHref = (page: number) => (page === 1 ? basePath : `${basePath}/page/${page}`)
+---
+
+<main class="relative min-h-[60vh] bg-background">
+  <div class="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,var(--color-primary)/0.06,transparent)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,var(--color-primary)/0.12,transparent)]" aria-hidden="true"></div>
+  <div class="relative container mx-auto px-4 py-10 md:px-6 md:py-16">
+    <div class={`mx-auto flex w-full flex-col gap-8 ${BLOG_CONTENT_MAX_CLASS}`}>
+      <BlogListHeader>
+        <span slot="count">{totalCount} 篇</span>
+      </BlogListHeader>
+
+      <div class="flex flex-col gap-3">
+        {posts.map((post) => <BlogPostCard post={post} />)}
+      </div>
+
+      {totalPages > 1 && (
+        <nav class="mx-auto flex w-full justify-center pt-2 md:justify-end" aria-label="分页">
+          <ul class="flex flex-row flex-wrap items-center justify-center gap-1 sm:gap-1.5">
+            {currentPage > 1 && (
+              <li>
+                <a href={pageHref(currentPage - 1)} class={buttonClass('ghost', 'sm', 'gap-1')} aria-label="上一页">
+                  <Icon name="chevron-left" class="size-4" />
+                  <span class="hidden sm:inline">上一页</span>
+                </a>
+              </li>
+            )}
+            {pages.map((page) => (
+              <li>
+                <a href={pageHref(page)} class={buttonClass(page === currentPage ? 'outline' : 'ghost', 'icon')} aria-current={page === currentPage ? 'page' : undefined}>
+                  {page}
+                </a>
+              </li>
+            ))}
+            {currentPage < totalPages && (
+              <li>
+                <a href={pageHref(currentPage + 1)} class={buttonClass('ghost', 'sm', 'gap-1')} aria-label="下一页">
+                  <span class="hidden sm:inline">下一页</span>
+                  <Icon name="chevron-right" class="size-4" />
+                </a>
+              </li>
+            )}
+          </ul>
+        </nav>
+      )}
+    </div>
+  </div>
+</main>

@@ -1,0 +1,19 @@
+---
+import Icon from './Icon.astro'
+import { buttonClass } from '@/lib/ui'
+---
+
+<button
+  type="button"
+  aria-label="回到顶部"
+  class={buttonClass('outline', 'icon', 'fixed bottom-6 right-6 z-40 rounded-full border-border/80 bg-background/90 shadow-md backdrop-blur-sm')}
+  data-back-to-top
+>
+  <Icon name="arrow-up" class="size-5" />
+</button>
+
+<script is:inline>
+  document.querySelector('[data-back-to-top]')?.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+</script>

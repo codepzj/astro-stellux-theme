@@ -1,0 +1,224 @@
+---
+title: Docs 写知识库
+description: 使用 MDX 编写结构化知识库，知识库根保留 index.mdx，文件夹由目录路径自动生成。
+pubDate: 2026-06-26
+updatedDate: 2026-06-26
+sort: 2
+---
+
+## 知识库是什么
+
+知识库用于组织多篇有关联的文档。它和博客文章不同：
+
+- 博客是按时间线展示文章。
+- 知识库是按目录结构展示页面。
+- 每个知识库有一个根页面。
+- 根页面下面可以放页面，也可以放文件夹。
+
+访问入口：
+
+```text
+/document
+```
+
+某个知识库根地址，来自 `src/content/docs/` 下面的一级目录名：
+
+```text
+/document/{rootAlias}
+```
+
+知识库页面地址，来自知识库目录内的相对路径：
+
+```text
+/document/{rootAlias}/{pagePath}
+```
+
+## 手写知识库放在哪里
+
+手写知识库建议放在：
+
+```text
+src/content/docs/{rootAlias}/
+```
+
+当前这份文档就是手写知识库：
+
+```text
+src/content/docs/astro-stellux/
+```
+
+## 路径就是规则
+
+知识库不再手写 `rootId`、`kind`、`contentId`、`parentId`、`documentId`、`isDir` 这些字段。代码会按文件路径自动判断：
+
+| 文件路径 | 推导结果 | 访问地址 |
+| --- | --- | --- |
+| `src/content/docs/my-guide/index.mdx` | 知识库根 | `/document/my-guide` |
+| `src/content/docs/my-guide/install.mdx` | 顶层页面 | `/document/my-guide/install` |
+| `src/content/docs/my-guide/basics/` | 文件夹 | 不单独生成页面 |
+| `src/content/docs/my-guide/basics/install.mdx` | 文件夹下的页面 | `/document/my-guide/basics/install` |
+
+内部需要的 ID 也会由路径推导：
+
+| 内部字段 | 推导方式 |
+| --- | --- |
+| `rootId` / `documentId` | 一级目录名，例如 `my-guide` |
+| `contentId` | 页面相对路径，例如 `my-guide/basics/install` |
+| `parentId` | 上一级目录路径，例如 `my-guide/basics` |
+| `kind` | 根 `index.mdx` 是 `root`，其它 `.mdx` 是 `page`，中间目录是自动生成的 `dir` |
+| `isDir` | 是否为代码自动生成的目录节点 |
+
+## 新建知识库根目录
+
+先创建一个目录：
+
+```text
+src/content/docs/my-guide/
+```
+
+再创建根文件：
+
+```text
+src/content/docs/my-guide/index.mdx
+```
+
+根文件模板：
+
+````mdx
+---
+title: "我的知识库"
+description: "这个知识库的简介，会显示在文档列表里。"
+pubDate: 2026-06-26
+updatedDate: 2026-06-26
+sort: 10
+thumbnail: "/docs/my-guide.jpg"
+---
+````
+
+根文件通常只写 frontmatter。只要根目录下面有页面，根页面会自动显示知识库目录树。
+
+## 新建知识库页面
+
+在同一目录下创建页面：
+
+```text
+src/content/docs/my-guide/install.mdx
+```
+
+页面模板：
+
+````mdx
+---
+title: "安装"
+description: "安装说明。"
+pubDate: 2026-06-26
+updatedDate: 2026-06-26
+sort: 1
+---
+
+## 安装
+
+这里写安装步骤。
+````
+
+访问地址：
+
+```text
+/document/my-guide/install
+```
+
+## Frontmatter 字段说明
+
+根文档和页面使用同一套可写字段：
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `title` | 是 | 知识库名称 |
+| `description` | 否 | 知识库简介 |
+| `pubDate` | 否 | 创建时间 |
+| `updatedDate` | 否 | 更新时间 |
+| `sort` | 否 | 知识库排序，数字越小越靠前 |
+| `thumbnail` | 否 | 知识库封面 |
+
+页面的标题写页面标题，根文档的标题写知识库名称。除此之外，路径关系都交给代码判断。
+
+## 文件夹怎么写
+
+文件夹只需要真实目录，不需要 `index.mdx`。目录名称会直接作为侧边栏里的文件夹标题。
+
+目录结构示例：
+
+```text
+src/content/docs/my-guide/
+├── index.mdx
+└── basics/
+    └── install.mdx
+```
+
+文件夹下面的页面直接放在该目录里：
+
+````mdx
+---
+title: "安装"
+sort: 1
+---
+
+## 安装
+````
+
+页面 URL 会跟随目录层级：
+
+```text
+/document/my-guide/basics/install
+```
+
+也就是说，目录结构同时决定侧边栏层级和页面 URL。
+
+如果你想调整文件夹显示名称，直接改文件夹名。例如 `basics/` 会显示为 `basics`，`基础篇/` 会显示为 `基础篇`。
+
+## 知识库封面
+
+知识库封面统一放在：
+
+```text
+public/docs/
+```
+
+命名规则：
+
+```text
+public/docs/{知识库目录名}.jpg
+```
+
+frontmatter 写：
+
+```yaml
+thumbnail: "/docs/my-guide.jpg"
+```
+
+## 排序规则
+
+知识库列表和侧边栏都按 `sort` 排序：
+
+1. 数字越小越靠前。
+2. `sort` 相同时按创建时间排序。
+3. 侧边栏层级由目录结构决定。
+
+## 写完后的检查
+
+新增或修改知识库后运行：
+
+```sh
+pnpm check
+pnpm build
+```
+
+常见问题：
+
+| 问题 | 检查点 |
+| --- | --- |
+| 文档列表没有出现 | 是否存在 `src/content/docs/{知识库目录}/index.mdx` |
+| 页面 404 | 文件路径是否和访问路径一致 |
+| 侧边栏不显示 | 页面是否放在知识库一级目录下面 |
+| 子页面没嵌套 | 页面是否放进对应文件夹 |
+| 排序不对 | 同级页面的 `sort` 是否设置正确 |

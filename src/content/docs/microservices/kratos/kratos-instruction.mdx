@@ -1,0 +1,36 @@
+---
+title: kratos常用命令
+description: kratos常用命令
+pubDate: 2026-04-12
+updatedDate: 2026-04-12
+sort: 2
+---
+
+## 运行项目
+
+### CLI运行
+
+```plain
+kratos run
+```
+
+### **手动编译**
+
+```plain
+go build -o ./bin ./...
+./helloworld -conf ../configs
+```
+
+## proto生成模版
+
+### client
+
+```plain
+kratos proto add api/shortvid-service/v1/file.proto
+```
+
+### server
+
+```plain
+kratos proto server api/shortvid-service/v1/file.proto -t app/shortvid-service/internal/service
+```

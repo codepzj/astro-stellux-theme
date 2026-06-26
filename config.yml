@@ -1,0 +1,95 @@
+stellux:
+  title: 浩瀚星河
+  url: https://www.golangblog.com
+  description: 浩瀚星河的个人技术博客，记录 Golang 学习与开发实践。
+  author: 浩瀚星河
+  avatar: /avatar.jpg
+  repoUrl: https://github.com/codepzj/stellux-web
+  locale: zh-CN
+  htmlLang: zh-CN
+  navLinks:
+    - href: /blog
+      label: Posts
+    - href: /document
+      label: Docs
+    - href: /friends
+      label: Friends
+friendTypes:
+  - value: 0
+    label: 大佬
+    description: 长期输出与值得反复阅读的站点
+  - value: 1
+    label: 技术型
+    description: 工程、架构与技术实践相关的朋友
+  - value: 2
+    label: 生活型
+    description: 记录日常、观点与个人表达的角落
+friendsPage:
+  title: 友链
+  eyebrow: Friends
+  description: 一些认真写作、持续创造，或者单纯让人想常去看看的站点。
+  emptyTitle: 暂时还没有友链
+  emptyDescription: 欢迎把你的站点投递过来，审核后会展示在这里。
+  exchangeTitle: 友链交换规则
+  exchangeDescription: 每月持续输出内容；请先挂载本站友链，完成后提交申请。
+friends:
+  - name: 李文周
+    description: 总结Go语言学习之路，提供免费的Go语言学习教程，希望与大家一起学习进步。
+    site_url: https://www.liwenzhou.com/
+    avatar_url: https://avatars.githubusercontent.com/u/9710547?v=4
+    website_type: 0
+  - name: 姓王者的博客
+    description: 探索、学习、进步、创造无限可能
+    site_url: https://xingwangzhe.fun
+    avatar_url: https://xingwangzhe.fun/avatar.webp
+    website_type: 1
+  - name: 宇阳
+    description: 记录所学知识，缩短和大神的差距！
+    site_url: https://liuyuyang.net
+    avatar_url: https://q1.qlogo.cn/g?b=qq&nk=3311118881&s=640
+    website_type: 0
+  - name: Castamere
+    description: 代码美学
+    site_url: https://www.castamerego.com/
+    avatar_url: https://github.com/Casta-mere.png
+    website_type: 1
+  - name: 旺东自留地
+    description: 爱生活、爱摸鱼
+    site_url: https://wang618.cn
+    avatar_url: https://wang618.cn/logo.gif
+    website_type: 2
+  - name: 全栈奋斗者
+    description: 分享日常技术学习
+    site_url: https://www.yangworld.top
+    avatar_url: https://q1.qlogo.cn/g?b=qq&nk=2779643212&s=640
+    website_type: 1
+  - name: Frederick's Blog
+    description: Sky is the limit.
+    site_url: https://www.ooowl.net/
+    avatar_url: https://www.ooowl.net/favicon.png
+    website_type: 2
+  - name: One
+    description: teek主题搬运工，明心静性，爱自己
+    site_url: https://onedayxyy.cn/
+    avatar_url: https://onedayxyy.cn/favicon.ico
+    website_type: 0
+  - name: PYM博客
+    description: 欢迎！Welcome!
+    site_url: https://pym.plus
+    avatar_url: https://pan.pym.plus/f/kOtY/PYMbk.png
+    website_type: 1
+  - name: 凤凰架构
+    description: 华为架构大佬，构建可靠的大型分布式系统
+    site_url: https://icyfenix.cn/
+    avatar_url: https://icyfenix.cn/images/logo-color.png
+    website_type: 0
+  - name: W3C技术联盟
+    description: 让Web服务全人类
+    site_url: https://w3c.cool
+    avatar_url: https://w3c.cool/logo.svg
+    website_type: 0
+  - name: 陈明勇的博客
+    description: 一名热爱技术、乐于分享的开发者，同时也是开源爱好者。
+    site_url: https://chenmingyong.cn
+    avatar_url: https://chenmingyong.cn/static/4a100f93f7e176fa8026f98f533abcd3.jpg
+    website_type: 0
